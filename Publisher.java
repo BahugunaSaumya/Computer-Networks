@@ -41,7 +41,7 @@ public class Publisher extends Node {
 		String[] rooms={"1","2","3"};
 		for(int i=0; i < rooms.length;i++) {
 			topicNumbers.put(i, rooms[i]);
-			System.out.println("Topic " + topicNumbers.get(i) + " was created.");
+	//		System.out.println("Topic " + topicNumbers.get(i) + " was created.");
 		}
 	}
 
@@ -75,12 +75,31 @@ public class Publisher extends Node {
 		  System.out.println("Packet sent");
 	}
 	
-	public static String Randomstring()  
+        public static String RandomNumbers(){
+        	String arr[]= new String [10];
+        	int i=0;
+            while(i<10) {   
+        	Random rand = new Random();
+                  //10 random numbers
+                Integer random=rand.nextInt(90)+10; //generates random no. between 10 and 100
+                arr[i]=random.toString();
+  //              System.out.println(arr[i]);
+                i=i+1;
+                }
+                Random r=new Random();        
+              	int randomNumber=r.nextInt(arr.length);
+//              	System.out.println(arr[randomNumber]);
+              	return arr[randomNumber];
+
+        }
+
+	public static String data()  
     {        
-      	String[] arr={"20", "26", "30", "17", "23"};
-      	Random r=new Random();        
-      	int randomNumber=r.nextInt(arr.length);
-    	return "the Temp is "+arr[randomNumber]+" *Celcius";
+      //	String[] arr={"20", "26", "30", "17", "23"};
+      	//Random r=new Random();        
+      	//int randomNumber=r.nextInt(arr.length);
+		//System.out.println("1234"+RandomNumbers());
+    	return "the Temp is "+RandomNumbers()+" degree ";
     }
 
 
@@ -91,7 +110,7 @@ public class Publisher extends Node {
 		//String message=topic;
 	//	terminal.println("Please enter the name of the topic you want to publish a message for: " + topic);
 	//	String message = terminal.read("Please enter the message that you would like to publish: ");
-		String message=Randomstring();
+		String message=data();
 	//	terminal.println("Please enter the message that you would like to publish: " + message);
 		int topicNumber = Integer.MAX_VALUE;
 		for (int i = 0; i < topicNumbers.size(); i++) {
@@ -126,11 +145,11 @@ public class Publisher extends Node {
 			if (startingString.toUpperCase().contains(CREATE)) {
 				createTopic();
 	     	    this.wait(); // wait for ACK
-				//this.wait(); // wait for MESSAGE
+		//		this.wait(); // wait for MESSAGE
 			} else if (startingString.toUpperCase().contains(PUBLISH)) {
 				if (publishMessage()) {
 				this.wait(); // wait for ACK
-					//this.wait(); // wait for MESSAGE
+			//		this.wait(); // wait for MESSAGE
 				}
 			} else {
 				System.out.println("Invalid input.");

@@ -12,21 +12,14 @@ import java.net.SocketException;
 	import java.util.concurrent.CountDownLatch;
 	
 	public abstract class Node  {
-		static final int PACKETSIZE = 2000;
-	
-		
-	
+		static final int PACKETSIZE =500 ;
 		static final byte ACK = 0;
 		static final byte BRK=2;
 		static final byte NEW = 4;
-		
 		static final byte Pub = 5;
 		static final byte SUB = 6;
 		static final byte USUB = 7;
 		static final byte Mes = 8;
-		
-		
-		
 		static final String PUB_DST = "172.20.0.0";
 		static final String SUB_DST="172.30.0.0";
 		static final int PUB_PORT = 50000;
@@ -44,37 +37,19 @@ import java.net.SocketException;
 			listener.setDaemon(true);
 			listener.start();
 		}
-	
-		/**
-		 * Create an array of bytes for a DatagramPacket and returns it. Based on
-		 * custom packet data layout; byte 0 = type, byte 1 = sequence number for
-		 * Go-Back-N, bytes 2-5 = topic number, remaining bytes = message.
-		 */
-		
-	
-		/** Take the type of packet, topic number, message and destination address
-		 * and return an array of one or more packets. Assumes a message can be
-		 * stored in multiple packets, but the actual program will only work if the
-		 * message fits in one packet.
-		 *///package dA2;
-	
-	
-	
-	
-	
 		private byte[] createPacketData(int type, int sequenceNumber, int topicNumber, byte[] message) {
 			byte[] data = new byte[PACKETSIZE];
 			data[0] = (byte) type;
-			System.out.println("sequence number"+sequenceNumber);
+	//		System.out.println("sequence number"+sequenceNumber);
 			data[1] = (byte) sequenceNumber;
 			ByteBuffer byteBuffer = ByteBuffer.allocate(4);
 			byteBuffer.putInt(topicNumber);
-			System.out.println("top"+topicNumber);
+		//	System.out.println("top"+topicNumber);
 			 byteBuffer.rewind();
 			byte[] topicNumberArray =byteBuffer.array();
 			for (int i = 0; i < 4; i++) {
 				data[i + 2] = topicNumberArray[i];
-			   System.out.println("this " + topicNumberArray[i] );
+//   System.out.println("this " + topicNumberArray[i] );
 			}
 			for (int i = 0; i < message.length && i < PACKETSIZE; i++) {
 				data[i + 6] = message[i];
@@ -119,7 +94,7 @@ import java.net.SocketException;
 			byte[] intArray = new byte[4];
 			for (int i = 0; i < intArray.length; i++) {
 				intArray[i] = data[i + 2];
-				System.out.println("Topic number"+intArray[i]);
+//				System.out.println("Topic number"+intArray[i]);
 			}
 			return ByteBuffer.wrap(intArray).getInt();
 		}
@@ -140,7 +115,7 @@ import java.net.SocketException;
 		protected void sendAck(DatagramPacket receivedPacket) {
 			byte[] data = receivedPacket.getData();
 			setType(data, ACK);
-			System.out.println("79 "+ receivedPacket.getSocketAddress());
+			//System.out.println("79 "+ receivedPacket.getSocketAddress());
 			DatagramPacket ack = new DatagramPacket(data, data.length, receivedPacket.getSocketAddress());
 			try {
 				socket.send(ack);
@@ -154,7 +129,7 @@ import java.net.SocketException;
 			String data = getMessage(data1);
 			byte[] data2=data.getBytes();
 			setType(data2, BRK);
-			System.out.println("79 "+ data);
+		//	System.out.println("79 "+ data);
 			InetSocketAddress inet=new InetSocketAddress(SUB_DST,50001+Integer.parseInt(data));
 			DatagramPacket ack = new DatagramPacket(data2, data2.length,inet );
 			try {
@@ -170,25 +145,14 @@ import java.net.SocketException;
 		
 		public abstract void onReceipt(DatagramPacket packet);
 	
-		/**
-		 *
-		 * Listener thread
-		 * 
-		 * Listens for incoming packets on a datagram socket and informs registered
-		 * receivers about incoming packets.
-		 */
+	
 		class Listener extends Thread {
 	
-			/*
-			 * Telling the listener that the socket has been initialized
-			 */
+			
 			public void go() {
 				latch.countDown();
 			}
 	
-			/*
-			 * Listen for incoming packets and inform receivers
-			 */
 			public void run() {
 				try {
 					latch.await();

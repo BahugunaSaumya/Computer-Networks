@@ -20,14 +20,14 @@ import java.util.Hashtable;
 import java.util.Scanner;
 
 public class Subscriber extends Node   {
-	/** Constant substrings to recognize user input. */
+	
 	Scanner sc=new Scanner (System.in);
 	private static final String SUBSCRIBE = "SUB";
 	public static final String UNSUBSCRIBE = "UNSUB";
 	private Hashtable<String, Integer> subscriberMap;
 	boolean notified=false;
 	private Hashtable<String, Integer> Rooms;
-//	private Terminal terminal;
+
 	 int SUB_POR=0;
 	private InetSocketAddress dstAddress;
 	private boolean invalidInput;
@@ -36,17 +36,16 @@ public class Subscriber extends Node   {
     	 this.data=data;
      }
 	public int getseq(String data) {
-System.out.println("have ent");
+//System.out.println("have ent");
 		int seq = Rooms.get(data);
-	System.out.println("Seq " +seq);
+	//System.out.println("Seq " +seq);
 	return seq;
 	}
-	/* Subscriber constructor. Initialises the terminal, datagram socket and listener.
-	*/
+	
 	Subscriber() {
 		invalidInput = true;
 		try {
-			//this.terminal = terminal;
+		
 			subscriberMap = new Hashtable<String, Integer>();
 			Rooms= new Hashtable<String, Integer>();
 			 notified=false;
@@ -63,7 +62,7 @@ System.out.println("have ent");
 			dstAddress = new InetSocketAddress(SUB_DST, BKR_PORT);
 			//String data;
 			
-			System.out.println("hell0000000000000000kmksdkasndkasndkasndkandkansdkasnd"+data);
+	//		System.out.println("hell0000000000000000kmksdkasndkasndkasndkandkansdkasnd"+data);
 			
 			
 		} catch (java.lang.Exception e) {
@@ -72,10 +71,7 @@ System.out.println("have ent");
 
 	
 
-	/* Start method of subscriber. The initial loop runs while the subscriber has not successfully subscribed to a
-	 * topic. invalidInput may be set to false in the onReceipt method so that the initial loop is broken and the
-	 * subscriber enters a state of permanently waiting for messages.
-	 */
+	
 public synchronized void start() throws Exception {
 	J1:
 	while (invalidInput == true) {
@@ -91,9 +87,9 @@ public synchronized void start() throws Exception {
 					unsubscribe();
 				
 			this.wait(); // wait for ACK
-			System.out.println("1");
+		//	System.out.println("1");
 			//this.wait();//}// wait for MESSAGE 
-			System.out.println("2");
+	//		System.out.println("2");
 		    continue J1;
 			} else if (startingString.toUpperCase().contains(SUBSCRIBE)) {
 				System.out.println("Please enter Room to subscribe to: ");
@@ -101,18 +97,18 @@ public synchronized void start() throws Exception {
 				port(data);
 				subscriberMap.put(data,50001+Integer.parseInt(data));
 				SUB_POR=subscriberMap.get(data); 
-				 System.out.println(SUB_POR);
+			//	 System.out.println(SUB_POR);
 				 if(SUB_POR!=0) {
 			socket = new DatagramSocket(SUB_POR);
-			 System.out.println(SUB_POR);
+			 //System.out.println(SUB_POR);
 					listener.go();
 				 }
-					System.out.println(socket);
+				//	System.out.println(socket);
 				//port(data);
 				subscribe();
-				System.out.println("Not listening");
+				//System.out.println("Not listening");
 			    this.wait(); // wait for ACK
-			    System.out.println("Not listening2");
+			    //System.out.println("Not listening2");
 				this.wait(); // wait for MESSAGE
 			} else {
 				System.out.println("Invalid input.");
@@ -129,26 +125,24 @@ public synchronized void start() throws Exception {
 	   	{
 	   		Rooms.put(data, i);
 	   	}
-	System.out.println("hee"+ Rooms.size());
+//	System.out.println("hee"+ Rooms.size());
 	}
 
-	/* Takes user input about the name of the topic to subscribe to and sends a subscription
-	 * packet to the broker.
-	 */
+	
 	public synchronized void subscribe() throws SocketException {
-System.out.println("re");
+//System.out.println("re");
 		Set(data);
-		System.out.println("no");
+	//	System.out.println("no");
 		
-		System.out.println("yes");
+		//System.out.println("yes");
 		int seq= getseq(data);
 		
 		
 		
-		System.out.println("ye");
+		//System.out.println("ye");
 		System.out.println("Please enter a Room to subscribe to: " + data);
 		System.out.println("Sending packet..."+seq);
-		System.out.println(dstAddress);
+	//	System.out.println(dstAddress);
 		DatagramPacket packet = createPackets(SUB, seq, data, dstAddress)[0];
 		try {
 			socket.send(packet);
@@ -160,18 +154,18 @@ System.out.println("re");
 	
 	public synchronized void unsubscribe() throws SocketException {
 		
-	  System.out.println("Please enter a topic to unsubscribe from: ");
+	  System.out.println("Please enter a Room to unsubscribe from: ");
 	  String data = sc.next();
 	  subscriberMap.put(data,50001+Integer.parseInt(data));
 		SUB_POR=subscriberMap.get(data); 
-		 System.out.println(SUB_POR);
+//		 System.out.println(SUB_POR);
 		 if(SUB_POR!=0) {
 	socket = new DatagramSocket(SUB_POR);
-	 System.out.println(SUB_POR);
+	// System.out.println(SUB_POR);
 			listener.go();
 		 }
 	//  int seq=getseq(data);
-	  System.out.println("Please enter a topic to unsubscribe from: " + data);
+	  System.out.println("Please enter a Room to unsubscribe from: " + data);
 	  System.out.println("Sending packet..." );
 		DatagramPacket packet = createPackets(USUB, 0, data, dstAddress)[0];
 		try {
@@ -181,38 +175,33 @@ System.out.println("re");
 		System.out.println("Packet sent");
 	}
 
-	/* Mainline for subscriber. Initialises the terminal, calls the constructor and start
-	 * method.
-	 */
+	
 	public static void main (String[] args) {
 		try {
-			//Terminal terminal = new Terminal("Subscriber");
+		
 			new Subscriber().start();
 		} catch (java.lang.Exception e) {
 		}
 	}
 
-	/* Implementation of the abstract method in Node.java to handle incoming Datagram Packets. Prints either
-	 * an ack, a message or a publication. May change the value of 'invalidInput' based on a received message
-	 * to determine whether the subscriber can exit the state of looking for a topic to subscribe to.
-	 */
+
 	@Override
 	public synchronized void onReceipt(DatagramPacket packet) {
 		try {
 			this.notify();
 			
 			byte[] data = packet.getData();
-			System.out.println("I have recieved");
+//			System.out.println("I have recieved");
 			if (getType(data)==BRK){
 			     
-				System.out.println("We have exited the data " +getMessage(data));
+				System.out.println("We have exited the Room " +getMessage(data));
 				sendAck(packet);
 				notified=true;
 				//this.start();
 				try {
-					//Terminal terminal = new Terminal("Subscriber");
-			Subscriber s1=	new Subscriber();
-			s1.start(); 
+	
+						Subscriber s1=	new Subscriber();
+							s1.start(); 
 				} catch (java.lang.Exception e) {
 				}
 			}
