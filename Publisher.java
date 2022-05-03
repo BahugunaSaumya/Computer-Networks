@@ -1,10 +1,6 @@
 //package DA3;
-//package dA2;
 
-/** Publisher class for custom Publish-Subscribe protocol. Takes user input and creates
- * topics, which it can then publish messages for. Interacts with the Broker who stores
- * what topics exist as well as the list of subscribers to each topic. @author: Jack Gilbride
- */
+
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -18,37 +14,37 @@ import java.util.Scanner;
 
 public class Publisher extends Node {
 
-	/** Constant substrings to recognize user input. */
+
 	private static final String CREATE = "CRE";
 	private static final String PUBLISH = "PUB";
     Scanner sc = new Scanner(System.in);
-	//Terminal terminal; 
+	
 	InetSocketAddress dstAddress;
-	/** Map topic numbers to topic names, map agreed with Broker. */
-	private Map<Integer, String> topicNumbers;
+
+	private Map<Integer, String> RoomNumbers;
 
 	
 	Publisher() {
 		try {
-			//this.terminal = terminal;
+			
 			dstAddress = new InetSocketAddress(PUB_DST, BKR_PORT);
 			socket = new DatagramSocket(PUB_PORT);
 			listener.go();
 		} catch (java.lang.Exception e) {
 			e.printStackTrace();
 		}
-		topicNumbers = new HashMap<Integer, String>();
+		RoomNumbers = new HashMap<Integer, String>();
 		String[] rooms={"1","2","3"};
 		for(int i=0; i < rooms.length;i++) {
-			topicNumbers.put(i, rooms[i]);
-	//		System.out.println("Topic " + topicNumbers.get(i) + " was created.");
+			RoomNumbers.put(i, rooms[i]);
+	//		System.out.println("Room " + RoomNumbers.get(i) + " was created.");
 		}
 	}
 
 	
 	public static void main(String[] args) {
 		try {
-		//	Terminal terminal = new Terminal("Publisher");
+
 			new Publisher().start();
 			System.out.println("Program completed");
 		} catch (java.lang.Exception e) {
@@ -57,16 +53,15 @@ public class Publisher extends Node {
 	}
 
 	
-	private void createTopic() throws SocketException {
+	private void createRoom() throws SocketException {
 		
 		
 	    System.out.println("Please enter a room to create: ");
-	    String topic = sc.next(); 
-	    System.out.println("Please enter a room to create: " + topic);
+	    String Room = sc.next(); 
 	    System.out.println("Sending packet...");
 
-		DatagramPacket[] packets = createPackets(NEW, topicNumbers.size(), topic, dstAddress);
-		topicNumbers.put(topicNumbers.size(), topic);
+		DatagramPacket[] packets = createPackets(NEW, RoomNumbers.size(), Room, dstAddress);
+		RoomNumbers.put(RoomNumbers.size(), Room);
 		try {
 			socket.send(packets[0]);
 		} catch (IOException e) {
@@ -75,53 +70,48 @@ public class Publisher extends Node {
 		  System.out.println("Packet sent");
 	}
 	
-        public static String RandomNumbers(){
+        public static String RandomTemp(){
         	String arr[]= new String [10];
         	int i=0;
             while(i<10) {   
         	Random rand = new Random();
-                  //10 random numbers
-                Integer random=rand.nextInt(90)+10; //generates random no. between 10 and 100
+                
+                Integer random=rand.nextInt(90)+10; 
                 arr[i]=random.toString();
-  //              System.out.println(arr[i]);
+
                 i=i+1;
                 }
                 Random r=new Random();        
               	int randomNumber=r.nextInt(arr.length);
-//              	System.out.println(arr[randomNumber]);
+
               	return arr[randomNumber];
 
         }
 
 	public static String data()  
     {        
-      //	String[] arr={"20", "26", "30", "17", "23"};
-      	//Random r=new Random();        
-      	//int randomNumber=r.nextInt(arr.length);
-		//System.out.println("1234"+RandomNumbers());
-    	return "the Temp is "+RandomNumbers()+" degree ";
+    	return "the Temp is "+RandomTemp()+" degree ";
     }
 
 
 	private boolean publishMessage() throws SocketException {
 		
 		System.out.println("Please enter the name of the room you want to publish the details for: ");
-		String topic = sc.next(); 
-		//String message=topic;
-	//	terminal.println("Please enter the name of the topic you want to publish a message for: " + topic);
-	//	String message = terminal.read("Please enter the message that you would like to publish: ");
+		String Room = sc.next(); 
+		//String message=Room;
+	
 		String message=data();
-	//	terminal.println("Please enter the message that you would like to publish: " + message);
-		int topicNumber = Integer.MAX_VALUE;
-		for (int i = 0; i < topicNumbers.size(); i++) {
-			if ((topicNumbers.get(i)).equals(topic)) {
-				topicNumber = i;
+	
+		int RoomNumber = Integer.MAX_VALUE;
+		for (int i = 0; i < RoomNumbers.size(); i++) {
+			if ((RoomNumbers.get(i)).equals(Room)) {
+				RoomNumber = i;
 			}
 		}
-		if (topicNumber == Integer.MAX_VALUE) {
-			System.out.println("This topic does not exist.");
+		if (RoomNumber == Integer.MAX_VALUE) {
+			System.out.println("This Room does not exist.");
 		} else {
-			DatagramPacket[] packets = createPackets(Pub, topicNumber, message, dstAddress);
+			DatagramPacket[] packets = createPackets(Pub, RoomNumber, message, dstAddress);
 			try {
 				System.out.println("Sending packet...");
 				socket.send(packets[0]);
@@ -137,19 +127,18 @@ public class Publisher extends Node {
 
 	public synchronized void start() throws Exception {
 		while (true) {
-		
-			System.out.println("Enter CREATE to create a new topic or PUBLISH to publish a new message: ");
+		//	System.out.println("\b\b\b\b\b\b\b\b\b"); 
+			System.out.println("Enter CREATE to create a new Room or PUBLISH to publish a new message: ");
 			String startingString =sc.next();
-			System.out.println(
-					"Enter CREATE to create a new topic or \nPUBLISH to publish a new message: " + startingString);
+			//System.out.println("Enter CREATE to create a new Room or \nPUBLISH to publish a new message: " + startingString);
 			if (startingString.toUpperCase().contains(CREATE)) {
-				createTopic();
+				createRoom();
 	     	    this.wait(); // wait for ACK
-		//		this.wait(); // wait for MESSAGE
+			  //   this.wait(); // wait for MESSAGE
 			} else if (startingString.toUpperCase().contains(PUBLISH)) {
 				if (publishMessage()) {
 				this.wait(); // wait for ACK
-			//		this.wait(); // wait for MESSAGE
+					//this.wait(); // wait for MESSAGE
 				}
 			} else {
 				System.out.println("Invalid input.");

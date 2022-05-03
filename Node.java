@@ -14,7 +14,7 @@ import java.net.SocketException;
 	public abstract class Node  {
 		static final int PACKETSIZE =500 ;
 		static final byte ACK = 0;
-		static final byte BRK=2;
+		static final byte BRK = 2;
 		static final byte NEW = 4;
 		static final byte Pub = 5;
 		static final byte SUB = 6;
@@ -24,7 +24,6 @@ import java.net.SocketException;
 		static final String SUB_DST="172.30.0.0";
 		static final int PUB_PORT = 50000;
 		static final int BKR_PORT = 50001;
-		static final int SUB_PORT = 50002;
 	
 	
 		DatagramSocket socket;
@@ -37,19 +36,20 @@ import java.net.SocketException;
 			listener.setDaemon(true);
 			listener.start();
 		}
-		private byte[] createPacketData(int type, int sequenceNumber, int topicNumber, byte[] message) {
+		private byte[] createPacketData(int type, int sequenceNumber, int RoomNumber, byte[] message) {
 			byte[] data = new byte[PACKETSIZE];
+	
 			data[0] = (byte) type;
 	//		System.out.println("sequence number"+sequenceNumber);
 			data[1] = (byte) sequenceNumber;
 			ByteBuffer byteBuffer = ByteBuffer.allocate(4);
-			byteBuffer.putInt(topicNumber);
-		//	System.out.println("top"+topicNumber);
+			byteBuffer.putInt(RoomNumber);
+		//	System.out.println("top"+RoomNumber);
 			 byteBuffer.rewind();
-			byte[] topicNumberArray =byteBuffer.array();
+			byte[] RoomNumberArray =byteBuffer.array();
 			for (int i = 0; i < 4; i++) {
-				data[i + 2] = topicNumberArray[i];
-//   System.out.println("this " + topicNumberArray[i] );
+				data[i + 2] = RoomNumberArray[i];
+//   System.out.println("this " + RoomNumberArray[i] );
 			}
 			for (int i = 0; i < message.length && i < PACKETSIZE; i++) {
 				data[i + 6] = message[i];
@@ -57,10 +57,11 @@ import java.net.SocketException;
 			return data;
 		}
 		
-		protected DatagramPacket[] createPackets(int type, int topicNumber, String message, InetSocketAddress dstAddress) throws SocketException {
+		protected DatagramPacket[] createPackets(int type, int RoomNumber, String message, InetSocketAddress dstAddress) throws SocketException {
 			int messageSize = PACKETSIZE - 6;
 			byte[] tmpArray = message.getBytes();
 			byte[] messageArray = new byte[tmpArray.length];
+		
 			for (int i = 0; i < tmpArray.length; i++) {
 				messageArray[i] = tmpArray[i];
 			}
@@ -75,11 +76,13 @@ import java.net.SocketException;
 				for (int j = offset; j < offset + messageArray.length; j++) {
 					dividedMessage[j] = messageArray[j + offset];
 				}
-				byte[] data = createPacketData(type, sequenceNumber, topicNumber, dividedMessage);
+				byte[] data = createPacketData(type, sequenceNumber, RoomNumber, dividedMessage);
 			DatagramPacket packet = new DatagramPacket(data, data.length, dstAddress);
+		
 				packets[sequenceNumber] = packet;
 				offset += messageSize;
 			}
+
 			return packets;
 		}
 		protected int getType(byte[] data) {
@@ -90,11 +93,11 @@ import java.net.SocketException;
 			return data[1];
 		}
 	
-		protected int getTopicNumber(byte[] data) {
+		protected int getRoomNumber(byte[] data) {
 			byte[] intArray = new byte[4];
 			for (int i = 0; i < intArray.length; i++) {
 				intArray[i] = data[i + 2];
-//				System.out.println("Topic number"+intArray[i]);
+//				System.out.println("Room number"+intArray[i]);
 			}
 			return ByteBuffer.wrap(intArray).getInt();
 		}
@@ -130,7 +133,7 @@ import java.net.SocketException;
 			byte[] data2=data.getBytes();
 			setType(data2, BRK);
 		//	System.out.println("79 "+ data);
-			InetSocketAddress inet=new InetSocketAddress(SUB_DST,50001+Integer.parseInt(data));
+			InetSocketAddress inet=new InetSocketAddress(SUB_DST,BKR_PORT+Integer.parseInt(data));
 			DatagramPacket ack = new DatagramPacket(data2, data2.length,inet );
 			try {
 				socket.send(ack);
@@ -147,22 +150,20 @@ import java.net.SocketException;
 	
 	
 		class Listener extends Thread {
-	
+
 			
-			public void go() {
+			public void go() {                	// Starts Listening on the port of the class where the function go was called and waits
 				latch.countDown();
 			}
 	
 			public void run() {
 				try {
 					latch.await();
-					// Endless loop: attempt to receive packet, notify receivers,
-					// etc
 					while (true) {
-						DatagramPacket packet = new DatagramPacket(new byte[PACKETSIZE], PACKETSIZE);
+						DatagramPacket packet = new DatagramPacket(new byte[PACKETSIZE], PACKETSIZE);    //Creates a Packet of Packet Size which is 500 for this code
 						socket.receive(packet);
 	
-						onReceipt(packet);
+	 					onReceipt(packet);       // calls the abstract Class onReceipt which is defined in every sub class
 					}
 				} catch (Exception e) {
 					if (!(e instanceof SocketException))

@@ -1,10 +1,7 @@
 //package DA3;
 //package dA2;
 
-/** Broker class for custom Publish-Subscribe protocol. Handles datagram packets to
- * facilitate the creation of, publication of, subscription to and unsubscription from
- * topics. @author: Jack Gilbride
- */
+
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -19,16 +16,16 @@ import java.util.Iterator;
 import java.util.Map;
 
 public class Broker extends Node {
-//	private Terminal terminal;
-	
-	private Hashtable<String, /*ArrayList<*/InetSocketAddress/*>*/> subscriberMap;
 
-	private Hashtable<Integer, String> topicNumbers;
+	
+	private Hashtable<String, /*ArrayList<*/InetSocketAddress/*>*/> subscriberList;
+
+	private Hashtable<Integer, String> Room;
 	Iterator<String> iterators;
 	/*	ArrayList<*/InetSocketAddress/*>*/ socket1= new /*ArrayList<*/InetSocketAddress/*>*/(SUB_DST,BKR_PORT);
 	
 	    Broker() {
-		//this.terminal = terminal;
+
 		try {
 			socket = new DatagramSocket(BKR_PORT);
 			listener.go();
@@ -37,38 +34,38 @@ public class Broker extends Node {
 		java.lang.Exception e) {
 			e.printStackTrace();
 		}
-		subscriberMap = new Hashtable<String, /*ArrayList<*/InetSocketAddress/*>*/>();
-		topicNumbers = new Hashtable<Integer, String>();
-	       Iterator<String> iterators = subscriberMap.keySet().iterator();
+		subscriberList = new Hashtable<String, /*ArrayList<*/InetSocketAddress/*>*/>();
+		Room = new Hashtable<Integer, String>();
+	      
 		String[] rooms={"1","2","3"};
 		/*	ArrayList<*/InetSocketAddress/*>*/ socketNumbers= new /*ArrayList<*/InetSocketAddress/*>*/(SUB_DST,BKR_PORT);
 		for(int i=0; i < rooms.length;i++) {
-			topicNumbers.put(i, rooms[i]);
-			subscriberMap.put(rooms[i], socketNumbers);
-	//		System.out.println("Topic " + topicNumbers.get(i) + " was created.");
+			Room.put(i, rooms[i]);
+			subscriberList.put(rooms[i], socketNumbers);
+	//		System.out.println("Room " + RoomNumbers.get(i) + " was created.");
 		}
 			
 	}
 
 	public static void main(String[] args) {
 		try {
-//			Terminal terminal = new Terminal("Broker");
+
 			new Broker().start();
 		} catch (java.lang.Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	private boolean createTopic(byte[] data) {
+	private boolean createRoom(byte[] data) {
 	/*	ArrayList<*/InetSocketAddress/*>*/ socketNumbers= new /*ArrayList<*/InetSocketAddress/*>*/(SUB_DST,BKR_PORT);
 	
 		
-		String topicName = getMessage(data);
-		if (!subscriberMap.containsKey(topicName)) {
-			subscriberMap.put(topicName, socketNumbers);
-			int topicNumber = getTopicNumber(data);
-			topicNumbers.put(topicNumber, topicName);
-//			System.out.println("Topic " + topicName + " was created.");
+		String RoomName = getMessage(data);
+		if (!subscriberList.containsKey(RoomName)) {
+			subscriberList.put(RoomName, socket1);
+			int RoomNumber = getRoomNumber(data);
+			Room.put(RoomNumber, RoomName);
+//			System.out.println("Room " + RoomName + " was created.");
 			return true;
 		}
 		return false;
@@ -76,16 +73,16 @@ public class Broker extends Node {
 
 
 	private boolean publish(byte[] data) throws SocketException {
-		int topicNumber = getTopicNumber(data);
-	//	System.out.println("getting "+topicNumber);
+		int RoomNumber = getRoomNumber(data);
+	//	System.out.println("getting "+RoomNumber);
 		setType(data, Pub);
-		if (topicNumbers.containsKey(topicNumber)) {
-			String topicName = topicNumbers.get(topicNumber);
-			//System.out.println("name"+topicName);
-			InetSocketAddress dstAddresses = subscriberMap.get(topicName);
+		if (Room.containsKey(RoomNumber)) {
+			String RoomName = Room.get(RoomNumber);
+			//System.out.println("name"+RoomName);
+			InetSocketAddress dstAddresses = subscriberList.get(RoomName);
 //			System.out.println("234   "+dstAddresses);
 	//		System.out.println("235   "+socket1);
-		//	System.out.println("236"   +subscriberMap);
+		//	System.out.println("236"   +subscriberList);
 			if((dstAddresses.equals(new /*ArrayList<*/InetSocketAddress/*>*/(SUB_DST,BKR_PORT)))){
 				System.out.println("No one has Subscribed to this Room");
 				return false;
@@ -96,7 +93,7 @@ public class Broker extends Node {
 							try {DatagramPacket publication = new DatagramPacket(data, data.length, dstAddresses/*.get(i)*/);
 							
 								socket.send(publication);
-								System.out.println("Topic " + topicName + " was published.");
+								System.out.println("Room " + RoomName + " was published.");
 							} catch (IOException e) {
 								e.printStackTrace();
 							}
@@ -110,17 +107,17 @@ public class Broker extends Node {
 	}
 
 	private boolean subscribe(byte[] data, SocketAddress subscriberAddress) {
-		String topicName = getMessage(data);
-		//System.out.println("ropa " +topicName);
-		if (subscriberMap.containsKey(topicName)) {
-			/*ArrayList<*/InetSocketAddress/*>*/ subscribers = subscriberMap.get(topicName);
-		//	System.out.println(subscriberMap.get(topicName));
+		String RoomName = getMessage(data);
+		//System.out.println("ropa " +RoomName);
+		if (subscriberList.containsKey(RoomName)) {
+			/*ArrayList<*/InetSocketAddress/*>*/ subscribers = subscriberList.get(RoomName);
+		//	System.out.println(subscriberList.get(RoomName));
 		//	System.out.println(subscriberAddress);
-			subscriberMap.put(topicName,(InetSocketAddress) subscriberAddress);
-			//subscriberMap.remove(topicName);
-			//subscriberMap.put(topicName, subscribers);
-//			System.out.println(subscriberMap.get(topicName));
-			System.out.println("A new subscriber subscribed to " + topicName + ".");
+			subscriberList.put(RoomName,(InetSocketAddress) subscriberAddress);
+			//subscriberList.remove(RoomName);
+			//subscriberList.put(RoomName, subscribers);
+//			System.out.println(subscriberList.get(RoomName));
+			System.out.println("A new subscriber subscribed to " + RoomName + ".");
 			return true;
 		}
 		return false;
@@ -129,29 +126,29 @@ public class Broker extends Node {
 	
 	private boolean unsubscribe(byte[] data, SocketAddress subscriberAddress) {
 		boolean unsubscribed = false;
-		String topicName = getMessage(data);
-		if (subscriberMap.containsKey(topicName)) {
-			/*ArrayList<*/InetSocketAddress/*>*/ subscribers = subscriberMap.get(topicName);
+		String RoomName = getMessage(data);
+		if (subscriberList.containsKey(RoomName)) {
+			/*ArrayList<*/InetSocketAddress/*>*/ subscribers = subscriberList.get(RoomName);
 			if (!(subscribers==null)/*.isEmpty()*/) {
 				/*for (int i = 0; i < subscribers.size(); i++) {*/
 					if (subscribers.equals(socket1)){
-					System.out.println ("You are not Subscriberd to the room "+topicName);
+					System.out.println ("You are not Subscriberd to the room "+RoomName);
 				    unsubscribed=false;
 					}
 					else{
 					//	System.out.println(subscribers);
 					sendBRK(data);
-					subscriberMap.put(topicName,socket1);
-	//			System.out.println("237"   +subscriberMap);
-//						System.out.println("daaaaaaaaaaaaaaaaaaaam " +subscriberMap.get(topicName));
-						System.out.println("A subscriber unsubscribed from " + topicName + ".");
+					subscriberList.put(RoomName,socket1);
+	//			System.out.println("237"   +subscriberList);
+//						System.out.println("daaaaaaaaaaaaaaaaaaaam " +subscriberList.get(RoomName));
+						System.out.println("A subscriber unsubscribed from " + RoomName + ".");
 						
 						unsubscribed = true;
 					}
 				}
 			//}
-		/*	subscriberMap.remove(topicName);
-			subscriberMap.put(topicName, subscribers);*/
+		/*	subscriberList.remove(RoomName);
+			subscriberList.put(RoomName, subscribers);*/
 		}
 		return unsubscribed;
 	}
@@ -186,12 +183,12 @@ public class Broker extends Node {
 			byte[] data = packet.getData();
 			switch (getType(data)) {
 			case NEW:
-		System.out.println("Request recieved to create a topic.");
+		System.out.println("Request recieved to create a Room.");
 			sendAck(packet);
-				if (!createTopic(data)) {
-					sendMessage("This is already a topic.", packet.getSocketAddress());
+				if (!createRoom(data)) {
+					sendMessage("This is already a Room.", packet.getSocketAddress());
 				} else {
-					sendMessage("Topic creation successful.", packet.getSocketAddress());
+					sendMessage("Room creation successful.", packet.getSocketAddress());
 				}
 				break;
 			case Pub:
@@ -204,7 +201,7 @@ public class Broker extends Node {
 				}
 				break;
 			case SUB:
-			System.out.println("Request recieved to subscribe to a topic.");
+			System.out.println("Request recieved to subscribe to a Room.");
 				sendAck(packet);
 				if (!subscribe(data, packet.getSocketAddress())) {
 					sendMessage("This Room does not exist on your database.", packet.getSocketAddress());
@@ -214,7 +211,7 @@ public class Broker extends Node {
 				}
 				break;
 			case USUB:
-				System.out.println("Request recieved to unsubscribe from a topic.");
+				System.out.println("Request recieved to unsubscribe from a Room.");
 				sendAck(packet);
 				
 				if (!unsubscribe(data, packet.getSocketAddress())) {

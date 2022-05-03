@@ -1,15 +1,6 @@
 //package DA3;
 //package dA2;
 
-/** Subscriber class for custom Publish-Subscribe protocol. Takes user input via a
- * terminal and interacts with the broker to subscribe and unsubscribe from topics.
- * Due to problems with threading I could not figure out how to get the subscriber
- * to wait for user input to subscribe and unsubscribe from topics while also waiting
- * on incoming packets to print messages of the topics that it is subscribed to. As a 
- * result the current implementation can subscribe to exactly one topic, then going to 
- * a state where it waits for messages from that topic. @author: Jack Gilbride
- */
-
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -24,8 +15,9 @@ public class Subscriber extends Node   {
 	Scanner sc=new Scanner (System.in);
 	private static final String SUBSCRIBE = "SUB";
 	public static final String UNSUBSCRIBE = "UNSUB";
-	private Hashtable<String, Integer> subscriberMap;
-	boolean notified=false;
+	private Hashtable<String, Integer> subscriberList;
+	boolean notified;
+	
 	private Hashtable<String, Integer> Rooms;
 
 	 int SUB_POR=0;
@@ -43,19 +35,20 @@ public class Subscriber extends Node   {
 	}
 	
 	Subscriber() {
+
 		invalidInput = true;
 		try {
 		
-			subscriberMap = new Hashtable<String, Integer>();
+			subscriberList = new Hashtable<String, Integer>();
 			Rooms= new Hashtable<String, Integer>();
-			 notified=false;
+			 notified=true;
 /*		socket = new DatagramSocket(SUB_PORT);
 			System.out.println(socket);
 			listener.go();
 	*/		
-				subscriberMap.put("1",50003);
-				subscriberMap.put("2",50004);
-				subscriberMap.put("3",50005);
+				subscriberList.put("1",50003);
+				subscriberList.put("2",50004);
+				subscriberList.put("3",50005);
 				Rooms.put("2", 2);
 				Rooms.put("3", 3);
 				       
@@ -76,33 +69,23 @@ public synchronized void start() throws Exception {
 	J1:
 	while (invalidInput == true) {
 			
-			System.out.println("Enter SUBSCRIBE to subscribe to a topic or UNSUBSCRIBE to unsubscribe from a topic: ");
+			System.out.println("Enter SUBSCRIBE to subscribe to a Room or UNSUBSCRIBE to unsubscribe from a Room: ");
 					String startingString = sc.next();
 					
-			System.out.println("Enter SUBSCRIBE to subscribe to a topic or\nUNSUBSCRIBE to unsubscribe from a topic: "+ startingString);
+			System.out.println("Enter SUBSCRIBE to subscribe to a Room or\nUNSUBSCRIBE to unsubscribe from a Room: "+ startingString);
 			if (startingString.toUpperCase().contains(UNSUBSCRIBE)) {
 //				if(SUB_POR==0)
-			{System.out.println("Subscribe First");}
+	//		{System.out.println("Subscribe First");}
 		//		else {
 					unsubscribe();
 				
 			this.wait(); // wait for ACK
 		//	System.out.println("1");
-			//this.wait();//}// wait for MESSAGE 
+			this.wait();//}// wait for MESSAGE 
 	//		System.out.println("2");
 		    continue J1;
 			} else if (startingString.toUpperCase().contains(SUBSCRIBE)) {
-				System.out.println("Please enter Room to subscribe to: ");
-				String data = sc.next(); 
-				port(data);
-				subscriberMap.put(data,50001+Integer.parseInt(data));
-				SUB_POR=subscriberMap.get(data); 
-			//	 System.out.println(SUB_POR);
-				 if(SUB_POR!=0) {
-			socket = new DatagramSocket(SUB_POR);
-			 //System.out.println(SUB_POR);
-					listener.go();
-				 }
+			
 				//	System.out.println(socket);
 				//port(data);
 				subscribe();
@@ -116,7 +99,7 @@ public synchronized void start() throws Exception {
 			}
 		
 		}
-		while (!notified) {
+		while ((notified==true)) {
 			this.wait();
 		}
 	}
@@ -130,6 +113,17 @@ public synchronized void start() throws Exception {
 
 	
 	public synchronized void subscribe() throws SocketException {
+		System.out.println("Please enter Room to subscribe to: ");
+		String data = sc.next(); 
+		port(data);
+		subscriberList.put(data,BKR_PORT+Integer.parseInt(data));
+		SUB_POR=subscriberList.get(data); 
+	//	 System.out.println(SUB_POR);
+		 if(SUB_POR!=0) {
+	socket = new DatagramSocket(SUB_POR);
+	 //System.out.println(SUB_POR);
+			listener.go();
+		 }
 //System.out.println("re");
 		Set(data);
 	//	System.out.println("no");
@@ -153,11 +147,12 @@ public synchronized void start() throws Exception {
 
 	
 	public synchronized void unsubscribe() throws SocketException {
-		
+
+
 	  System.out.println("Please enter a Room to unsubscribe from: ");
 	  String data = sc.next();
-	  subscriberMap.put(data,50001+Integer.parseInt(data));
-		SUB_POR=subscriberMap.get(data); 
+	  subscriberList.put(data,BKR_PORT+Integer.parseInt(data));
+		SUB_POR=subscriberList.get(data); 
 //		 System.out.println(SUB_POR);
 		 if(SUB_POR!=0) {
 	socket = new DatagramSocket(SUB_POR);
@@ -165,7 +160,7 @@ public synchronized void start() throws Exception {
 			listener.go();
 		 }
 	//  int seq=getseq(data);
-	  System.out.println("Please enter a Room to unsubscribe from: " + data);
+	//  System.out.println("Please enter a Room to unsubscribe from: " + data);
 	  System.out.println("Sending packet..." );
 		DatagramPacket packet = createPackets(USUB, 0, data, dstAddress)[0];
 		try {
@@ -174,7 +169,9 @@ public synchronized void start() throws Exception {
 		}
 		System.out.println("Packet sent");
 	}
-
+   public void stop() {
+	System.exit(0);
+    }
 	
 	public static void main (String[] args) {
 		try {
@@ -194,10 +191,11 @@ public synchronized void start() throws Exception {
 //			System.out.println("I have recieved");
 			if (getType(data)==BRK){
 			     
-				System.out.println("We have exited the Room " +getMessage(data));
+				System.out.println("You have exited the Room " +getMessage(data));
 				sendAck(packet);
-				notified=true;
-				//this.start();
+				notified=false;
+				invalidInput=false;
+			
 				try {
 	
 						Subscriber s1=	new Subscriber();
@@ -210,10 +208,18 @@ public synchronized void start() throws Exception {
 			} else if (getType(data) == Mes) {
 				System.out.println("Message received: " + getMessage(data)); 
 				sendAck(packet);
-				if (getMessage(data).equals("This topic does not exist.")) {
-					invalidInput = true;
+				if (getMessage(data).equals("This Room does not exist on your database.")) {
+					notified=true;
+					
+					try {
+		
+							Subscriber s1=	new Subscriber();
+								s1.start(); 
+					} catch (java.lang.Exception e) {
+					}
+				}
 					 
-				} else  {
+				else  {
 					invalidInput = false;
 				}
 			}else if (getType(data) == Pub) {
@@ -223,4 +229,6 @@ public synchronized void start() throws Exception {
 		} catch (Exception e) {
 		}
 	}
+
+	
 }
